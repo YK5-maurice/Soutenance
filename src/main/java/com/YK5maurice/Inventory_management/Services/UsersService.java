@@ -3,10 +3,14 @@ package com.YK5maurice.Inventory_management.Services;
 import com.YK5maurice.Inventory_management.Config.ConfigurationSecurity;
 import com.YK5maurice.Inventory_management.DTO.UsersDTO.CreateUsersDTO;
 import com.YK5maurice.Inventory_management.DTO.UsersDTO.UserDTO;
+import com.YK5maurice.Inventory_management.Exceptions.ResourceNotFoundException;
+import com.YK5maurice.Inventory_management.Exceptions.ValidationException;
+import com.YK5maurice.Inventory_management.Models.Departments;
 import com.YK5maurice.Inventory_management.Models.EnumTypeRole;
 import com.YK5maurice.Inventory_management.Models.Roles;
 import com.YK5maurice.Inventory_management.Models.Users;
 import com.YK5maurice.Inventory_management.Repository.UsersRepo;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
@@ -24,11 +28,20 @@ public class UsersService implements UserDetailsService {
 
     private final UsersRepo usersRepo;
     private final RolesService rolesService;
+    private final DepartmentService departmentService;
+    private final Department_UsersService departmentUsersService;
 
-    public UsersService(UsersRepo usersRepo,RolesService rolesService) {
+    public UsersService(UsersRepo usersRepo,RolesService rolesService, DepartmentService departmentService,
+                        //L'annotation @Lazy indique à Spring de charger la dépendance uniquement lorsque cela est nécessaire, évitant ainsi le cycle
+                        @Lazy Department_UsersService departmentUsersService) {
         this.usersRepo = usersRepo;
         this.rolesService=rolesService;
+        this.departmentService = departmentService;
+        this.departmentUsersService = departmentUsersService;
     }
+
+
+    // .....methode pour les authentification
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         Users users = usersRepo.findByUsername(username)
@@ -48,48 +61,82 @@ public class UsersService implements UserDetailsService {
         return new User(users.getName(), users.getPassword(), authorities);
     }
 
-//    // obtenir la liste de tous les utilisateur
-//    public List<Users> getUsers(){
-//        return usersRepo.findAll();
-//    }
-//
-//
-//    // obtenir un utilisateur par son id
-//    public Users getUserById(Long id){
-//        return usersRepo.findById(id).orElseThrow(()->new UsernameNotFoundException("utilisateur avec id "+id+" pas trouver"));
-//    }
 
-//    // creer un utililisateur
-//    public void createUsuer(CreateUsersDTO createUsersDTO){
-//
-//        //recuperation de l'utilisateur et role du UserDTO
-//        Users users = UserDTO_TO_user(createUsersDTO.getUsers());
-//        int indiceRole = createUsersDTO.getIndiceRole();
-//
-//        //choix du role en fonction de son indice (ex:1->ROLE_ADMIN)
-//        EnumTypeRole enumTypeRole = EnumTypeRole.values()[indiceRole];
-//        System.out.println(enumTypeRole);
-//        // creer un objet role car user utilise un objet role et non les enum directement
-//        Roles roles = rolesService.getRoleByName(enumTypeRole.name());
-//        System.out.println(roles.getDescription());
-//        //verifie si le mail existe pas
-//        if (usersRepo.existsByEmail(users.getEmail())) {
-//            throw new RuntimeException("Email already exists");
-//        }
-//        //crypter le password
-//        String password_encrypt= ConfigurationSecurity.bCryptPasswordEncoder().encode(users.getPassword());
-//        //ajout du passwordCrypte et du role a users
-//        users.setPassword(password_encrypt);
-//        users.setRole(roles);
-//        System.out.println(users.getRole());
-//        usersRepo.save(users);
-//    }
+    // ...... methode pour recuperer un utilisateur par son nom
+    public Users findByUsername(String username){
+        if (username == null){
+            throw new ValidationException("le nom de l'utilisateur ne doit pas etre null");
+        }
+        Users users = this.usersRepo.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("utilisateur avec le nom : "+username+" n'existe pas"));
 
-    //obtenir un utilisateur par son username
-    public Users findByUsername(String username) {
-        return usersRepo.findByUsername(username)
-                .orElse(null); // Retourne `null` si aucun utilisateur n'est trouvé.
+        return users;
     }
+
+
+    //....methode obtenir un utilisateur par son id
+    public Users getUserById(Long id){
+        if (id <= 0){
+            throw new ValidationException("le user avec l'id : "+id+" n'existe pas");
+        }
+        return usersRepo.findById(id).orElseThrow(()->new ResourceNotFoundException("utilisateur avec id : "+id+" n'existe pas"));
+    }
+
+
+    //....methode pour creer un utililisateur
+    public Users createUsuer(CreateUsersDTO createUsersDTO){
+        //verifie que createUsersDTO est bien diferent de null
+        if (createUsersDTO == null){
+            throw new ValidationException("l'objet (createUsersDTO) ne doit pas etre vide");
+        }
+
+        //recuperation du departement par son contenu dans createUsersDTO
+        Departments departments = this.departmentService.getDepartementByName(createUsersDTO.getDepartmentName());
+
+        //recuperation du role par son nom contenu dans createUsersDTO
+        Roles roles = this.rolesService.getRoleByName(createUsersDTO.getRoleName());
+
+        //recuperation de UserDTO contenu dans createUsersDTO
+        UserDTO userDTO = createUsersDTO.getUsers();
+
+        // Vérifie si le nom d'utilisateur existe déjà
+        if (usersRepo.findByUsername(userDTO.getUsername()).isPresent()) {
+            // Option 1 : Retourner une réponse appropriée
+            throw new ValidationException("Le nom d'utilisateur '" + userDTO.getUsername() + "' existe déjà");
+
+            // Option 2 : Ne rien faire et retourner l'utilisateur existant (si besoin)
+            // return usersRepo.findByUsername(userDTO.getUsername()).get();
+        }
+
+
+        //creation d'un new user pour l'insertion
+        Users users = new Users();
+
+        //initialisation des parametre de users
+        users.setName(userDTO.getName());
+        users.setEmail(userDTO.getEmail());
+        users.setUsername(userDTO.getUsername());
+       // users.setPassword(userDTO.getPassword());
+        //crypter le password
+        String password_encrypt= ConfigurationSecurity.bCryptPasswordEncoder().encode(userDTO.getPassword());
+        //ajout du passwordCrypte
+        users.setPassword(password_encrypt);
+        users.setCreated_at(new Date());
+        users.setStatus(userDTO.getStatus());
+        users.setRole(roles);
+
+        // Insertion dans la base de données
+        Users savedUser = this.usersRepo.save(users);
+
+        // Enregistrement dans department_users
+        try {
+            this.departmentUsersService.insertDepartment_users(departments.getId(), savedUser.getId());
+        } catch (Exception e) {
+            throw new RuntimeException("Erreur lors de l'enregistrement dans department_users : "+departments.getId()+"____" + savedUser.getId());
+        }
+
+        return savedUser;
+   }
+
 //
 //    //convert UserDTO TO user
 //    public Users UserDTO_TO_user(UserDTO userDTO){

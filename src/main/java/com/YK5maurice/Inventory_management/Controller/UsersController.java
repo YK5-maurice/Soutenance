@@ -37,7 +37,7 @@ public class UsersController {
     }
 
 
-
+// methode login(Authencate user)
 @PostMapping("/login")
 public ResponseEntity<?> login(@RequestBody UserLoginDTO loginRquest) {
     try {
@@ -81,6 +81,13 @@ System.out.println(authentication);
     }
 }
 
+
+// methode pour creer un user
+    @PostMapping("/createUser")
+    public ResponseEntity<Users> insertionUser(@RequestBody CreateUsersDTO createUsersDTO){
+        Users users = this.usersService.createUsuer(createUsersDTO);
+        return ResponseEntity.ok(users);
+    }
 
 
 //    // obtenir la liste des users

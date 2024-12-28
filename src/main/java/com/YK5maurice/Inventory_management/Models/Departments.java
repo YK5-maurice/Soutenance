@@ -20,4 +20,52 @@ public class Departments {
     private Date update_at;
     @OneToMany(mappedBy = "department",cascade = CascadeType.ALL)
     private List<Department_Users> departement_usersList;
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public Date getCreated_at() {
+        return created_at;
+    }
+
+    public void setCreated_at(Date created_at) {
+        this.created_at = created_at;
+    }
+
+    public Date getUpdate_at() {
+        return update_at;
+    }
+
+    public void setUpdate_at(Date update_at) {
+        this.update_at = update_at;
+    }
+
+    public List<Department_Users> getDepartement_usersList() {
+        return departement_usersList;
+    }
+
+    public void setDepartement_usersList(List<Department_Users> departement_usersList) {
+        this.departement_usersList = departement_usersList;
+    }
 }
