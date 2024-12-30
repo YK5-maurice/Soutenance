@@ -1,5 +1,6 @@
 package com.YK5maurice.Inventory_management.Models;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -18,6 +19,7 @@ public class Departments {
     private String description;
     private Date created_at;
     private Date update_at;
+    @JsonBackReference
     @OneToMany(mappedBy = "department",cascade = CascadeType.ALL)
     private List<Department_Users> departement_usersList;
 

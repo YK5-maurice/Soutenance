@@ -1,5 +1,6 @@
 package com.YK5maurice.Inventory_management.Models;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -17,9 +18,13 @@ public class Department_Users {
     @ManyToOne
     @JoinColumn(name = "department_id")
     private Departments department;
+    @JsonBackReference
     @ManyToOne
     @JoinColumn(name = "users_id")
     private Users users;
+
+    public Department_Users() {
+    }
 
     public Department_Users(Long id, Date created_at, Departments department, Users users) {
         this.id = id;

@@ -3,6 +3,7 @@ package com.YK5maurice.Inventory_management.Services;
 import com.YK5maurice.Inventory_management.Config.ConfigurationSecurity;
 import com.YK5maurice.Inventory_management.DTO.UsersDTO.CreateUsersDTO;
 import com.YK5maurice.Inventory_management.DTO.UsersDTO.UserDTO;
+import com.YK5maurice.Inventory_management.Exceptions.ResourceNoContent;
 import com.YK5maurice.Inventory_management.Exceptions.ResourceNotFoundException;
 import com.YK5maurice.Inventory_management.Exceptions.ValidationException;
 import com.YK5maurice.Inventory_management.Models.Departments;
@@ -136,6 +137,20 @@ public class UsersService implements UserDetailsService {
 
         return savedUser;
    }
+
+   //....methode pour recuperer All des users
+    public List<Users> getAllUsers(){
+        List<Users> usersList = this.usersRepo.findAll();
+
+        if (usersList.isEmpty()){
+            throw new ResourceNoContent("la liste des Users est vide");
+        }
+        try {
+            return usersList;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 
 //
 //    //convert UserDTO TO user

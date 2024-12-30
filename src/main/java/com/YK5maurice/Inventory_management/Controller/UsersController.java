@@ -90,29 +90,25 @@ System.out.println(authentication);
     }
 
 
-//    // obtenir la liste des users
-//    @GetMapping("/userslisteaa")
-//    public List<Users> getUsers(){
-//        return usersService.getUsers();
-//    }
-//
-//    //obtenir users par son id
-//    @GetMapping("/users")
-//    public Users getUserById(@RequestParam Long Id){
-//        return usersService.getUserById(Id);
-//    }
-//
-//    // create users
-//    @PostMapping("/usersliste")
-//    public ResponseEntity<String> createUser(@RequestBody CreateUsersDTO usersDTO) {
-//        try {
-//
-//
-//            usersService.createUsuer(usersDTO);
-//            return new ResponseEntity<>("User created successfully", HttpStatus.CREATED);
-//        } catch (RuntimeException e) {
-//            throw new RuntimeException(e);
-//        }
-//
-//    }
+    // obtenir la liste des users
+    @GetMapping("")
+    public ResponseEntity<List<Users>> getUsers(){
+        List<Users> usersList = this.usersService.getAllUsers();
+        return ResponseEntity.ok(usersList);
+    }
+
+
+    //obtenir users par son id
+    @GetMapping("/Id")
+    public ResponseEntity<Users> getUserById(@RequestParam Long id){
+        Users users = this.usersService.getUserById(id);
+        return ResponseEntity.ok(users);
+    }
+
+    // get users par son nom
+    @GetMapping("/Name")
+    public ResponseEntity<Users> getUsersByName(@RequestParam String name) {
+        Users users = this.usersService.findByUsername(name);
+        return ResponseEntity.ok(users);
+    }
 }
