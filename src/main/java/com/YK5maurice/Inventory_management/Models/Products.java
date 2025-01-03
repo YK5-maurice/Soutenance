@@ -16,9 +16,9 @@ public class Products {
     private Long id;
     private String name;
     private String description;
-    private Double quantity;
+   // private Double quantity;
     private Double price;
-    private Double reorder;
+    private Double reorder; //( Seuil de réapprovisionnement )
     private Date created_at;
     private Date update_at;
     @ManyToOne

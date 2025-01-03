@@ -23,7 +23,7 @@ public class GlobalExceptionHandler {
     //Gestion de l'exception "ResourceNoConten"
     @ExceptionHandler(ResourceNoContent.class)
     public ResponseEntity<String>handleResourceNoConten(ResourceNoContent ex){
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
     }
 
     // Gestion générique des autres exceptions
